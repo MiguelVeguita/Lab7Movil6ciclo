@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using Unity.Services.Authentication;
 using UnityEngine;
@@ -15,9 +16,11 @@ public class UILogin : MonoBehaviour
 
     [SerializeField] private TMP_InputField UpdateNameIF;
     [SerializeField] private Button updateNameBtn;
-
+    [SerializeField] private ClickerManager clickerManager;
 
     [SerializeField] private UnityPlayerAuth unityPlayerAuth;
+
+
     void Start()
     {
         loginPanel.gameObject.SetActive(true);
@@ -26,29 +29,61 @@ public class UILogin : MonoBehaviour
     private void OnEnable()
     {
         loginButton?.onClick.AddListener(LoginButton);
-        unityPlayerAuth.OnSingedIn += UnityPlayerOnSignedIn;
-
         updateNameBtn.onClick.AddListener(UpdateName);
-        unityPlayerAuth.OnUpdateName += UpdateNameVisual;
+
+        if (unityPlayerAuth != null)
+        {
+            unityPlayerAuth.OnSingedIn += UnityPlayerOnSignedIn;
+            unityPlayerAuth.OnUpdateName += UpdateNameVisual;
+
+            if (unityPlayerAuth.IsPlayerSignedIn)
+            {
+                Debug.Log("UI detected player is already signed in. Updating visuals.");
+                UnityPlayerOnSignedIn(unityPlayerAuth.PlayerInfo, unityPlayerAuth.PlayerName);
+            }
+        }
     }
-
-    
-
     private async void UpdateName()
     {
+        if (string.IsNullOrEmpty(UpdateNameIF.text)) return; 
+
         await unityPlayerAuth.UpdateName(UpdateNameIF.text);
+
+        clickerManager.SaveChanges(); 
     }
     private void UpdateNameVisual(string newName)
     {
         playerNameTxt.text = newName;
     }
-    private void UnityPlayerOnSignedIn(PlayerInfo playerInfo, string PlayerName)
+
+
+    private async void UnityPlayerOnSignedIn(PlayerInfo playerInfo, string PlayerName)
     {
+        Debug.Log("Login UI updated.");
         loginPanel.gameObject.SetActive(false);
         userPanel.gameObject.SetActive(true);
 
         playerIDTxt.text = "ID: " + playerInfo.Id;
-        playerNameTxt.text = PlayerName;
+        playerNameTxt.text = PlayerName; 
+
+        PlayerData loadedData = await unityPlayerAuth.LoadPlayerData();
+
+        if (loadedData != null)
+        {
+            Debug.Log("Datos guardados encontrados, actualizando UI.");
+
+            if (!string.IsNullOrEmpty(loadedData.playerName))
+            {
+                playerNameTxt.text = loadedData.playerName;
+            }
+
+            clickerManager.LoadStats(loadedData);
+        }
+        else
+        {
+            Debug.Log("No se encontraron datos guardados, usando valores por defecto.");
+            clickerManager.UpdateStatsUI();
+        }
     }
 
     private async void LoginButton()
@@ -60,5 +95,8 @@ public class UILogin : MonoBehaviour
     {
         loginButton?.onClick.RemoveListener(LoginButton);
         unityPlayerAuth.OnSingedIn -= UnityPlayerOnSignedIn;
+
+        updateNameBtn.onClick.RemoveListener(UpdateName);
+        unityPlayerAuth.OnUpdateName -= UpdateNameVisual;
     }
 }

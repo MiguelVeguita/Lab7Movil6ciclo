@@ -9,17 +9,16 @@ public class AnonymAuth : MonoBehaviour
 {
     private async void Start()
     {
-        await UnityServices.InitializeAsync();//->Inicializar los servicios de UGS
+        await UnityServices.InitializeAsync();
         Debug.Log(UnityServices.State);
         SetupEvents();
-
         await SignInAnonymouslyAsync();
     }
     private void SetupEvents()
     {
         AuthenticationService.Instance.SignedIn += () =>
         {
-            Debug.Log("Player ID "+ AuthenticationService.Instance.PlayerId);
+            Debug.Log("Player ID " + AuthenticationService.Instance.PlayerId);
             Debug.Log("Acces Token " + AuthenticationService.Instance.AccessToken);
         };
 
@@ -41,18 +40,16 @@ public class AnonymAuth : MonoBehaviour
         try
         {
             await AuthenticationService.Instance.SignInAnonymouslyAsync();
-           /* Debug.Log("Sign in anon succeeded");
-            Debug.Log("Player ID :" + AuthenticationService.Instance.PlayerId);*/
+            /* Debug.Log("Sign in anon succeeded");
+             Debug.Log("Player ID :" + AuthenticationService.Instance.PlayerId);*/
         }
         catch (AuthenticationException ex)
         {
             Debug.LogError(ex);
         }
-        catch(RequestFailedException ex)
+        catch (RequestFailedException ex)
         {
             Debug.LogError(ex);
         }
     }
-
-    
 }
