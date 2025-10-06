@@ -113,7 +113,7 @@ public class UnityPlayerAuth : MonoBehaviour
             return false; 
         }
     }
-
+    [Button]
     public async Task<PlayerData> LoadPlayerData()
     {
         var keysToLoad = new HashSet<string> { PlayerProfileKey };

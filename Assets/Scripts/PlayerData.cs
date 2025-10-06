@@ -5,4 +5,5 @@ public class PlayerData
     public int level;
     public int health;
     public int strength;
+    public int skillPoints;
 }
